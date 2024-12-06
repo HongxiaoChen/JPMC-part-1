@@ -50,6 +50,16 @@ def traditional_leapfrog(function: object, z0: object, t_span: object, n_steps: 
                z: [n_steps+1, batch_size, dim],
                dz: [n_steps+1, batch_size, dim].
     """
+    # check input with correct form
+
+    if t_span[1] <= t_span[0]:
+        raise tf.errors.InvalidArgumentError(None, None, "Invalid time span")
+
+    if n_steps <= 0:
+        raise tf.errors.InvalidArgumentError(None, None, "Number of steps must be positive")
+
+
+
     if len(z0.shape) == 1:
         z0 = tf.expand_dims(z0, 0)
     dt = (t_span[1] - t_span[0]) / n_steps
@@ -94,7 +104,7 @@ def traditional_leapfrog(function: object, z0: object, t_span: object, n_steps: 
 
     return z.stack(), dz.stack()  # return a list of data and deriv #return [q,p], [dq/dt, dp/dt]
 
-@tf.function(experimental_relax_shapes=True)
+
 def leapfrog(model, z0, t_span, n_steps):
     """
     Synchronized leapfrog integrator based on Equations (7) and (8) in the paper.
@@ -110,6 +120,8 @@ def leapfrog(model, z0, t_span, n_steps):
                t: [n_steps+1],
                z: [n_steps+1, batch_size, dim].
     """
+
+
     if len(z0.shape) == 1:
         z0 = tf.expand_dims(z0, 0)  # Add batch dimension
 
@@ -282,6 +294,8 @@ def compute_ess(samples, burn_in):
     Returns:
         list: ESS values for each dimension.
     """
+    if samples.shape[-1] % 2 != 0:
+        raise ValueError("Input dimension must be even")
     ess_values = []
     state_dim = samples.shape[-1] // 2
     for dim in range(state_dim):
@@ -301,6 +315,8 @@ def compute_average_ess(samples, burn_in):
     Returns:
         float: Average ESS across all dimensions.
     """
+    if samples.shape[-1] % 2 != 0:
+        raise ValueError("Input dimension must be even")
     ess_values = []
     state_dim = samples.shape[-1] // 2
     for dim in range(state_dim):

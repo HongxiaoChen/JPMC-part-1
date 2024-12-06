@@ -82,7 +82,7 @@ def train(args):
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
     # prepare data
-    data = get_dataset(seed=args.seed)
+    data = get_dataset(seed=args.seed, args=args)
     x = tf.convert_to_tensor(data['coords'], dtype=tf.float32)  #return [q, p]
     dxdt = tf.convert_to_tensor(data['dcoords'], dtype=tf.float32)  #return [dq, dp]
     dataset = tf.data.Dataset.from_tensor_slices((x, dxdt))

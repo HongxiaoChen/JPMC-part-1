@@ -20,6 +20,33 @@ class TraditionalHMC:
             args: Configuration arguments containing HMC parameters.
             logger: Logger instance for logging outputs
         """
+        # parameters check
+        if args.hmc_step_size <= 0:
+            raise ValueError(f"Step size must be positive, got {args.hmc_step_size}")
+
+        if args.trajectory_length <= 0:
+            raise ValueError(f"Trajectory length must be positive, got {args.trajectory_length}")
+
+        if args.input_dim <= 0:
+            raise ValueError(f"Input dimension must be positive, got {args.input_dim}")
+
+        if args.input_dim % 2 != 0:
+            raise ValueError(f"Input dimension must be even (for position-momentum pairs), got {args.input_dim}")
+
+        if args.hmc_samples <= 0:
+            raise ValueError(f"Number of samples must be positive, got {args.hmc_samples}")
+
+        if args.num_burnin < 0:
+            raise ValueError(f"Number of burn-in samples cannot be negative, got {args.num_burnin}")
+
+        if args.num_burnin >= args.hmc_samples:
+            raise ValueError(f"Number of burn-in samples ({args.num_burnin}) must be less than "
+                             f"total number of samples ({args.hmc_samples})")
+
+        if args.num_chains <= 0:
+            raise ValueError(f"Number of chains must be positive, got {args.num_chains}")
+
+
         self.logger = logger or sys.stdout
         self.num_chains = args.num_chains
         self.num_samples = args.hmc_samples

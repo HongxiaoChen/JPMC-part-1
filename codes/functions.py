@@ -1,9 +1,6 @@
 import tensorflow as tf
-from get_args import get_args
 import numpy as np
 
-
-args = get_args()
 
 
 @tf.function
@@ -167,9 +164,8 @@ def functions(coords, args):
         p1, p2 = tf.split(p, 2, axis=1)  # 各自形状为[batch_size, 1]
 
         # 势能项
-        #U1 = 0.5 * tf.square(q1) / (3 ** 2) + 0.5 * q1  # [batch_size, 1]
-        U1 = 0.5 * tf.square(q1) / (3 ** 2)
-        U2 = 0.5 * tf.square(q2) / tf.exp(q1)  # [batch_size, 1]
+        U1 = 0.5 * tf.square(q1) / (3 ** 2)  # [batch_size, 1]
+        U2 = 0.5 * tf.square(q2) / tf.exp(q1) + 0.5 * q1  # [batch_size, 1]
         U = U1 + U2  # [batch_size, 1]
 
         # 动能项

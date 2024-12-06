@@ -7,7 +7,6 @@ import logging
 from datetime import datetime
 import time
 
-args = get_args()
 
 def setup_logger(name):
     """
@@ -58,7 +57,7 @@ def setup_logger(name):
 
 logger = setup_logger('HNN_Data_Generation')
 
-def get_trajectory(t_span=None, timescale=None, y0=None, dt=None, **kwargs):
+def get_trajectory(t_span=None, y0=None, dt=None, args = None, **kwargs):
     """
     Generate trajectories using TensorFlow based on Hamiltonian dynamics.
 
@@ -67,9 +66,7 @@ def get_trajectory(t_span=None, timescale=None, y0=None, dt=None, **kwargs):
     t_span : list or tuple, optional
         Time span for trajectory generation as [start_time, end_time].
         Defaults to [0, args.len_sample].
-    timescale : float, optional
-        Time scale used to determine the number of sampling points.
-        Not used in this implementation.
+
     y0 : tf.Tensor or list, optional
         Initial state of the system. If None, it will be generated randomly.
     dt : float, optional
@@ -88,8 +85,9 @@ def get_trajectory(t_span=None, timescale=None, y0=None, dt=None, **kwargs):
         - t_eval : tf.Tensor
             The evaluated time points.
     """
-
     # Set default parameters
+    if args is None:
+        args = get_args()
     if dt is None:
         dt = 0.025
     if t_span is None:
@@ -138,7 +136,7 @@ def get_trajectory(t_span=None, timescale=None, y0=None, dt=None, **kwargs):
     return traj_split, deriv_split, t_eval
 
 
-def get_dataset(seed=0, samples=None, test_split=None, **kwargs):
+def get_dataset(seed=0, samples=None, test_split=None, args = None, t_span = None, **kwargs):
     """
     Generate or load a dataset for training and testing Hamiltonian Neural Networks.
 
@@ -168,7 +166,8 @@ def get_dataset(seed=0, samples=None, test_split=None, **kwargs):
     """
     logger.info("Starting dataset generation")
     start_time = time.time()
-
+    if args is None:
+        args = get_args()
     if samples is None:
         samples = args.num_samples
     if test_split is None:
@@ -201,7 +200,7 @@ def get_dataset(seed=0, samples=None, test_split=None, **kwargs):
         logger.info(f'Generating sample {s + 1}/{samples}')
 
         # Generate a trajectory for the current sample
-        traj_split, deriv_split, _ = get_trajectory(y0=y_init)
+        traj_split, deriv_split, _ = get_trajectory(y0=y_init, args=args, t_span=t_span)
 
         # Combine trajectory splits and derivative splits
         traj_combined = tf.stack([tf.squeeze(t) for t in traj_split], axis=1)

@@ -45,7 +45,7 @@ def plot_figure_2(args, logger):
     args_traj.hmc_step_size = 0.05  # Step size
     args_traj.hmc_samples = 1  # Only one sample needed
     args_traj.num_burnin = 0  # No burn-in required
-
+    args_traj.save_dir = 'files/1D_Gauss_mix'
     # Define several fixed initial momentum values
     initial_momenta = [
         tf.constant([1.0], dtype=tf.float32),
@@ -165,6 +165,7 @@ if __name__ == "__main__":
 
         # Configure necessary parameters
         args.dist_name = "1D_Gauss_mix"
+        args.save_dir = 'files/1D_Gauss_mix'
         args.input_dim = 2  # 1D position + 1D momentum
         args.hidden_dim = 100
         args.latent_dim = 100

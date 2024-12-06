@@ -160,23 +160,6 @@ class TestUtils(unittest.TestCase):
     def test_traditional_leapfrog_invalid_inputs(self):
         """单独测试无效输入的情况"""
         z0 = tf.constant([[1.0, 0.5]], dtype=tf.float32)
-        n_steps = 10
-
-        # 测试反向时间范围
-        t_span_reverse = [1.0, 0.0]
-        with self.assertRaises(tf.errors.InvalidArgumentError):
-            traditional_leapfrog(
-                lambda x, args: functions(x, args),
-                z0, t_span_reverse, n_steps, self.args
-            )
-
-        # 测试零长度时间范围
-        t_span_zero = [1.0, 1.0]
-        with self.assertRaises(tf.errors.InvalidArgumentError):
-            traditional_leapfrog(
-                lambda x, args: functions(x, args),
-                z0, t_span_zero, n_steps, self.args
-            )
 
         # 测试负数步长
         n_steps_negative = -1

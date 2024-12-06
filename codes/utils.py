@@ -51,10 +51,6 @@ def traditional_leapfrog(function: object, z0: object, t_span: object, n_steps: 
                dz: [n_steps+1, batch_size, dim].
     """
     # check input with correct form
-
-    if t_span[1] <= t_span[0]:
-        raise tf.errors.InvalidArgumentError(None, None, "Invalid time span")
-
     if n_steps <= 0:
         raise tf.errors.InvalidArgumentError(None, None, "Number of steps must be positive")
 

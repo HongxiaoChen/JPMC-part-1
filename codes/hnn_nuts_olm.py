@@ -198,7 +198,7 @@ def nuts_hnn_sample(hnn_model, args, traditional_only=False, logger=None):
         hnn_threshold = -1e-6  # Disable HNN if only traditional leapfrog is used
     leapfrog_threshold = args.leapfrog_error_threshold
     n_cooldown = args.n_cooldown
-    # 初始化存储数组
+    # initialize storage
     samples = tf.zeros([num_chains, num_samples, total_dim])
     acceptance = tf.zeros([num_chains, num_samples])
     errors = tf.zeros([num_chains, num_samples])  # Store error for each sample

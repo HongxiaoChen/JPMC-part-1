@@ -189,7 +189,9 @@ if __name__ == "__main__":
     Main script to configure arguments, initialize the logger, and generate Figure 3.
     """
     import os
+    from pathlib import Path
 
+    PROJECT_ROOT = Path(__file__).parent.parent
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
     # Set up logging
     logger = Logger()
@@ -201,6 +203,7 @@ if __name__ == "__main__":
 
         # Configure necessary parameters
         args.dist_name = "1D_Gauss_mix"
+        args.save_dir = 'files/1D_Gauss_mix'
         args.input_dim = 2  # 1D position + 1D momentum
         args.hidden_dim = 100
         args.latent_dim = 100

@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-
+import math
 
 
 @tf.function
@@ -130,24 +130,23 @@ def functions(coords, args):
     tf.Tensor
         Hamiltonian values with shape [batch_size, 1].
     """
-    # 确保输入是2D张量
     coords = tf.cast(coords, tf.float32)
     if len(coords.shape) == 1:
         coords = tf.expand_dims(coords, 0)  # [input_dim] -> [1, input_dim]
 
     # ******** 1D Gaussian Mixture #********
     if (args.dist_name == '1D_Gauss_mix'):
-        # 分离位置和动量，在第二个维度上分割
-        q, p = tf.split(coords, 2, axis=1)  # q,p形状均为[batch_size, 1]
+        # separate q and p
+        q, p = tf.split(coords, 2, axis=1)  # q,p are all [batch_size, 1]
 
-        # 势能项
+        # U(q)
         mu1, mu2 = 1.0, -1.0
         sigma = 0.35
         likelihood = 0.5 * (tf.exp(-(q - mu1) ** 2 / (2 * sigma ** 2)) +
                             tf.exp(-(q - mu2) ** 2 / (2 * sigma ** 2)))
         U = -tf.math.log(likelihood)  # [batch_size, 1]
 
-        # 动能项
+        # K(p)
         K = 0.5 * tf.square(p)  # [batch_size, 1]
 
         return U + K  # [batch_size, 1]
@@ -159,33 +158,33 @@ def functions(coords, args):
         q = coords[:, :dim]  # [batch_size, 2]
         p = coords[:, dim:]  # [batch_size, 2]
 
-        # 分离q1,q2
-        q1, q2 = tf.split(q, 2, axis=1)  # 各自形状为[batch_size, 1]
-        p1, p2 = tf.split(p, 2, axis=1)  # 各自形状为[batch_size, 1]
+        # separate q1,q2
+        q1, q2 = tf.split(q, 2, axis=1)  # [batch_size, 1]
+        p1, p2 = tf.split(p, 2, axis=1)  # [batch_size, 1]
 
-        # 势能项
+        # potential energy
         U1 = 0.5 * tf.square(q1) / (3 ** 2)  # [batch_size, 1]
         U2 = 0.5 * tf.square(q2) / tf.exp(q1) + 0.5 * q1  # [batch_size, 1]
         U = U1 + U2  # [batch_size, 1]
 
-        # 动能项
+        # K(p)
         K = 0.5 * (tf.square(p1) + tf.square(p2))  # [batch_size, 1]
 
         return U + K  # [batch_size, 1]
 
     # ******** 5D Ill-Conditioned Gaussian #********
     elif (args.dist_name == '5D_illconditioned_Gaussian'):
-        # 分离位置和动量
+        # separate p and q
         dim = args.input_dim // 2
         q = coords[:, :dim]  # [batch_size, 5]
         p = coords[:, dim:]  # [batch_size, 5]
 
-        # 势能项
+        # U(q)
         var = tf.constant([0.01, 0.1, 1.0, 10.0, 100.0])
-        var = tf.reshape(var, [1, -1])  # [1, 5]形状以便广播
+        var = tf.reshape(var, [1, -1])  # [1, 5]
         U = 0.5 * tf.reduce_sum(tf.square(q) / var, axis=1, keepdims=True)  # [batch_size, 1]
 
-        # 动能项
+        # K(p)
         K = 0.5 * tf.reduce_sum(tf.square(p), axis=1, keepdims=True)  # [batch_size, 1]
 
         return U + K  # [batch_size, 1]
@@ -197,76 +196,74 @@ def functions(coords, args):
         q = coords[:, :dim]  # [batch_size, dim]
         p = coords[:, dim:]  # [batch_size, dim]
 
-        # 势能项 - 向量化版本
+        # positions
         q_next = q[:, 1:]  # [batch_size, dim-1]
         q_curr = q[:, :-1]  # [batch_size, dim-1]
 
-        # 同时计算所有(q_{i+1} - q_i²)²项
+        # (q_{i+1} - q_i²)²
         term1 = 100.0 * tf.square(q_next - tf.square(q_curr))
 
-        # 同时计算所有(1-q_i)²项
+        # (1-q_i)²
         term2 = tf.square(1.0 - q_curr)
 
-        # 求和并除以20
+        # U(q)
         U = tf.reduce_sum(term1 + term2, axis=1, keepdims=True) / 20.0
 
-        # 动能项
+        # K(p)
         K = 0.5 * tf.reduce_sum(tf.square(p), axis=1, keepdims=True)
 
         return U + K  # [batch_size, 1]
 
     # ******** Allen-Cahn Stochastic PDE #********
     elif (args.dist_name == 'Allen_Cahn'):
-        # 分离位置和动量
+        # separate p and q
         dim = args.input_dim // 2  # dim should be 25
         q = coords[:, :dim]  # [batch_size, 25]
         p = coords[:, dim:]  # [batch_size, 25]
 
-        # 设置空间步长
+        # interval length
         dx = 1.0 / dim
 
-        # 计算空间导数项 - 向量化版本
+        # (u(i∆x + ∆x) − u(i∆x))²/(2∆x)
         q_next = q[:, 1:]  # [batch_size, dim-1]
         q_curr = q[:, :-1]  # [batch_size, dim-1]
 
-        # 计算所有差分项(u(i∆x + ∆x) − u(i∆x))²/(2∆x)
         diff_term = tf.square(q_next - q_curr) / (2 * dx)
 
-        # 计算所有势函数项V(u) = (1-u²)²
+        # V(u) = (1-u²)²
         V = tf.square(1.0 - tf.square(q))
 
-        # 累加所有项
+        # U(q)
         U = tf.reduce_sum(diff_term, axis=1, keepdims=True) + 0.5 * dx * tf.reduce_sum(V, axis=1, keepdims=True)
 
-        # 动能项
+        # K(p)
         K = 0.5 * tf.reduce_sum(tf.square(p), axis=1, keepdims=True)
 
         return U + K  # [batch_size, 1]
 
         # ******** New Distribution: f_obs_mu ********
     elif (args.dist_name == 'Elliptic'):
-        # 分离位置和动量
+        # separate p and q
         dim = args.input_dim // 2  # dim = 50
         q = coords[:, :dim]  # [1, 50]
         p = coords[:, dim:]  # [1, 50]
 
-        # 加载观测数据和传感器位置，现在都是[1,50]形状
-        f_obs_values, x_samples, y_samples = f_obs()  # 每个都是[1,50]
+        # generate noise = f(x,y) + noise
+        f_obs_values, x_samples, y_samples = f_obs()  # [1,50]
 
-        # 计算导数
+        # deriv of U
         u_x = tf.cos(2 * x_samples) * 2  # [1,50]
         u_y = tf.cos(2 * y_samples) * 2  # [1,50]
 
-        # 计算f_hat，输入输出都是[1,50]
         f_hat = compute_f_hat_with_nearest_neighbor(
             x_samples, y_samples, q, u_x, u_y
         )  # [1,50]
 
-        # 计算势能项 U(q)
+        # U(q)
         diff = f_obs_values - f_hat  # [1,50]
         U = 0.5 * tf.reduce_sum(tf.square(diff), axis=1, keepdims=True)  # [1,1]
 
-        # 动能项 K(p)
+        # K(p)
         K = 0.5 * tf.reduce_sum(tf.square(p), axis=1, keepdims=True)  # [1,1]
 
         return U + K  # [1,1]

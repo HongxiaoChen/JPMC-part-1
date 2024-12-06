@@ -61,6 +61,7 @@ def run_experiment():
     # Set experimental parameters
     args = get_args()
     args.dist_name = '1D_Gauss_mix'
+    args.save_dir = 'files/1D_Gauss_mix'
     args.input_dim = 2
     args.latent_dim = 100
     args.total_samples = 50

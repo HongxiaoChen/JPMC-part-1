@@ -4,7 +4,7 @@ import numpy as np
 import sys
 from pathlib import Path
 
-# 获取项目根目录
+# Get project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
@@ -13,28 +13,28 @@ from codes.functions import nearest_neighbor_derivative, compute_f_hat_with_near
 
 class TestFunctions(unittest.TestCase):
     def setUp(self):
-        """设置测试环境"""
-        # 创建测试数据
+        """Set up test environment"""
+        # Create test data
         self.n_points = 50
         self.x_samples = tf.random.uniform((1, self.n_points), 0, 3)
         self.y_samples = tf.random.uniform((1, self.n_points), 0, 3)
         self.g_values = tf.random.normal((1, self.n_points))
 
     def test_nearest_neighbor_derivative_dimensions(self):
-        """测试nearest_neighbor_derivative的维度处理"""
+        """Test dimension handling of nearest_neighbor_derivative"""
 
-        # 测试正确输入维度
+        # Test correct input dimensions
         d_g_dx, d_g_dy = nearest_neighbor_derivative(
             self.x_samples,
             self.y_samples,
             self.g_values
         )
 
-        # 检查输出维度
+        # Check output dimensions
         self.assertEqual(d_g_dx.shape, (1, self.n_points))
         self.assertEqual(d_g_dy.shape, (1, self.n_points))
 
-        # 测试无效输入维度 - 缺少batch维度
+        # Test invalid input dimensions - missing batch dimension
         invalid_x = tf.random.uniform((self.n_points,))
         invalid_y = tf.random.uniform((self.n_points,))
         invalid_g = tf.random.normal((self.n_points,))
@@ -42,44 +42,44 @@ class TestFunctions(unittest.TestCase):
         with self.assertRaises(tf.errors.InvalidArgumentError):
             nearest_neighbor_derivative(invalid_x, invalid_y, invalid_g)
 
-        # 测试不匹配的点数
+        # Test mismatched number of points
         invalid_x = tf.random.uniform((1, self.n_points + 1))
         with self.assertRaises(tf.errors.InvalidArgumentError):
             nearest_neighbor_derivative(invalid_x, self.y_samples, self.g_values)
 
     def test_nearest_neighbor_derivative_values(self):
-        """测试nearest_neighbor_derivative的计算结果"""
+        """Test computation results of nearest_neighbor_derivative"""
         d_g_dx, d_g_dy = nearest_neighbor_derivative(
             self.x_samples,
             self.y_samples,
             self.g_values
         )
 
-        # 检查输出的有限性
+        # Check output finiteness
         self.assertTrue(tf.reduce_all(tf.math.is_finite(d_g_dx)))
         self.assertTrue(tf.reduce_all(tf.math.is_finite(d_g_dy)))
 
     def test_compute_f_hat_dimensions(self):
-        """测试compute_f_hat_with_nearest_neighbor的维度处理"""
-        # 获取样本数据
+        """Test dimension handling of compute_f_hat_with_nearest_neighbor"""
+        # Get sample data
         f_obs_values, x_samples, y_samples = f_obs()
 
-        # 计算u_x和u_y
+        # Calculate u_x and u_y
         u_x = tf.cos(2 * x_samples) * 2
         u_y = tf.cos(2 * y_samples) * 2
 
-        # 创建测试q值
+        # Create test q values
         q = tf.random.normal((1, self.n_points))
 
-        # 测试正确输入维度
+        # Test correct input dimensions
         f_hat = compute_f_hat_with_nearest_neighbor(
             x_samples, y_samples, q, u_x, u_y
         )
 
-        # 检查输出维度
+        # Check output dimensions
         self.assertEqual(f_hat.shape, (1, self.n_points))
 
-        # 测试无效输入维度 - 缺少batch维度
+        # Test invalid input dimensions - missing batch dimension
         invalid_x = tf.random.uniform((self.n_points,))
         invalid_y = tf.random.uniform((self.n_points,))
         invalid_q = tf.random.normal((self.n_points,))
@@ -91,7 +91,7 @@ class TestFunctions(unittest.TestCase):
                 invalid_x, invalid_y, invalid_q, invalid_u_x, invalid_u_y
             )
 
-        # 测试不匹配的点数
+        # Test mismatched number of points
         invalid_x = tf.random.uniform((1, self.n_points + 1))
         with self.assertRaises(tf.errors.InvalidArgumentError):
             compute_f_hat_with_nearest_neighbor(
@@ -99,29 +99,30 @@ class TestFunctions(unittest.TestCase):
             )
 
     def test_compute_f_hat_values(self):
-        """测试compute_f_hat_with_nearest_neighbor的计算结果"""
-        # 获取样本数据
+        """Test computation results of compute_f_hat_with_nearest_neighbor"""
+        # Get sample data
         f_obs_values, x_samples, y_samples = f_obs()
 
-        # 计算u_x和u_y
+        # Calculate u_x and u_y
         u_x = tf.cos(2 * x_samples) * 2
         u_y = tf.cos(2 * y_samples) * 2
 
-        # 创建测试q值
+        # Create test q values
         q = tf.random.normal((1, self.n_points))
 
-        # 计算f_hat
+        # Compute f_hat
         f_hat = compute_f_hat_with_nearest_neighbor(
             x_samples, y_samples, q, u_x, u_y
         )
 
-        # 检查输出的有限性
+        # Check output finiteness
         self.assertTrue(tf.reduce_all(tf.math.is_finite(f_hat)))
 
-        # 检查输出是否在裁剪范围内
+        # Check if output is within clipping range
         self.assertTrue(tf.reduce_all(tf.abs(f_hat) <= 200.0))
 
     def tearDown(self):
+        """Clean up test environment"""
         tf.keras.backend.clear_session()
 
 

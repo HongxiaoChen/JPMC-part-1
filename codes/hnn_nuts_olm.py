@@ -8,8 +8,6 @@ from get_args import get_args
 import sys
 
 
-
-
 def get_model(args):
     """
     Build and load a pretrained HNN model.
@@ -185,7 +183,31 @@ def nuts_hnn_sample(hnn_model, args, traditional_only=False, logger=None):
     Returns:
         samples: [num_chains, num_samples, dim]
         acceptance: [num_chains, num_samples]
+
+    Raises:
+        ValueError: If any of the input parameters are invalid.
     """
+    # 参数验证
+    if args.nuts_step_size <= 0:
+        raise ValueError(f"Step size must be positive, got {args.nuts_step_size}")
+
+    if args.total_samples <= 0:
+        raise ValueError(f"Number of samples must be positive, got {args.total_samples}")
+
+    if args.burn_in < 0:
+        raise ValueError(f"Number of burn-in samples cannot be negative, got {args.burn_in}")
+
+    if args.burn_in >= args.total_samples:
+        raise ValueError(f"Number of burn-in samples ({args.burn_in}) must be less than "
+                         f"total number of samples ({args.total_samples})")
+
+    if args.num_chains <= 0:
+        raise ValueError(f"Number of chains must be positive, got {args.num_chains}")
+
+    if args.n_cooldown < 0:
+        raise ValueError(f"Cooldown period cannot be negative, got {args.n_cooldown}")
+
+    logger = logger or sys.stdout
     logger = logger or sys.stdout
     state_dim = args.input_dim // 2
     total_dim = args.input_dim

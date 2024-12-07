@@ -6,32 +6,33 @@ import shutil
 from pathlib import Path
 import sys
 
-# 获取项目根目录
+# Get project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
+
 
 class TestDataGeneration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        """在所有测试开始前设置环境"""
-        # 切换到codes目录
+        """Set up environment before all tests"""
+        # Change to codes directory
         os.chdir(os.path.join(PROJECT_ROOT, 'codes'))
-        # 将codes目录添加到Python路径
+        # Add codes directory to Python path
         if str(PROJECT_ROOT / 'codes') not in sys.path:
             sys.path.insert(0, str(PROJECT_ROOT / 'codes'))
 
-        # 在切换工作目录后再导入所需模块
+        # Import required modules after changing working directory
         global get_trajectory, get_dataset, get_args, from_pickle
         from codes.data import get_trajectory, get_dataset
         from codes.get_args import get_args
         from codes.utils import from_pickle
 
     def setUp(self):
-        """设置测试环境"""
-        # 创建临时保存目录
+        """Set up test environment"""
+        # Create temporary save directory
         self.temp_save_dir = PROJECT_ROOT / 'temp_test_data'
         self.temp_save_dir.mkdir(exist_ok=True)
 
-        # 配置测试用例
+        # Configure test cases
         self.test_configs = [
             {
                 'name': 'nD_Rosenbrock',
@@ -64,7 +65,14 @@ class TestDataGeneration(unittest.TestCase):
         ]
 
     def get_modified_args(self, config):
-        """获取修改后的参数"""
+        """Get modified arguments
+
+        Args:
+            config: Dictionary containing configuration parameters
+
+        Returns:
+            Modified args object
+        """
         args = get_args()
         args.dist_name = config['name']
         args.input_dim = config['input_dim']
@@ -75,27 +83,27 @@ class TestDataGeneration(unittest.TestCase):
         return args
 
     def test_get_trajectory(self):
-        """测试轨迹生成函数"""
+        """Test trajectory generation function"""
         for config in self.test_configs:
             with self.subTest(distribution=config['name']):
-                # 获取修改后的参数
+                # Get modified parameters
                 args = self.get_modified_args(config)
 
-                # 测试默认参数
+                # Test default parameters
                 traj_split, deriv_split, t_eval = get_trajectory(args=args)
 
-                # 检查输出维度
+                # Check output dimensions
                 self.assertEqual(len(traj_split), config['input_dim'])
                 self.assertEqual(len(deriv_split), config['input_dim'])
 
-                # 检查每个分量的维度
+                # Check dimensions of each component
                 for traj, deriv in zip(traj_split, deriv_split):
                     self.assertEqual(traj.shape[0], 1)  # batch size
                     self.assertEqual(deriv.shape[0], 1)  # batch size
-                    self.assertEqual(traj.shape[2], 1)  # 每个分量是标量
-                    self.assertEqual(deriv.shape[2], 1)  # 每个分量是标量
+                    self.assertEqual(traj.shape[2], 1)  # each component is scalar
+                    self.assertEqual(deriv.shape[2], 1)  # each component is scalar
 
-                # 测试自定义参数
+                # Test custom parameters
                 custom_t_span = [0, 2]
                 custom_dt = 0.1
                 y0 = tf.zeros([1, config['input_dim']])
@@ -107,73 +115,73 @@ class TestDataGeneration(unittest.TestCase):
                     args=args
                 )
 
-                # 检查时间点数量
+                # Check number of time points
                 expected_steps = int((custom_t_span[1] - custom_t_span[0]) / custom_dt)
                 self.assertEqual(t_eval.shape[0], expected_steps + 1)
 
-                # 检查轨迹的连续性
+                # Check trajectory continuity
                 for traj in traj_split:
-                    traj_squeezed = tf.squeeze(traj, axis=2)  # 移除最后的维度1
+                    traj_squeezed = tf.squeeze(traj, axis=2)  # remove last dimension of 1
                     diff = tf.reduce_max(tf.abs(traj_squeezed[:, 1:] - traj_squeezed[:, :-1]))
                     self.assertLess(float(diff), 10.0)
 
     def test_get_dataset(self):
-        """测试数据集生成函数"""
+        """Test dataset generation function"""
         for config in self.test_configs:
             with self.subTest(distribution=config['name']):
-                # 获取修改后的参数
+                # Get modified parameters
                 args = self.get_modified_args(config)
 
-                # 设置自定义时间范围
+                # Set custom time range
                 custom_t_span = [0, 2]
 
-                # 生成数据集
+                # Generate dataset
                 dataset = get_dataset(
                     seed=42,
                     samples=config['samples'],
-                    test_split=0.8,  # 80% 训练集
+                    test_split=0.8,  # 80% training set
                     args=args,
                     t_span=custom_t_span
                 )
 
-                # 检查数据集的结构
+                # Check dataset structure
                 expected_keys = ['coords', 'dcoords', 'test_coords', 'test_dcoords']
                 self.assertTrue(all(key in dataset for key in expected_keys))
 
-                # 计算预期的数据点数量
-                dt = 0.025  # 默认步长
+                # Calculate expected number of data points
+                dt = 0.025  # default step size
                 n_steps = int((custom_t_span[1] - custom_t_span[0]) / dt)
                 points_per_sample = n_steps + 1
                 total_points = config['samples'] * points_per_sample
 
-                train_size = int(total_points * 0.8)  # 80% 训练集
+                train_size = int(total_points * 0.8)  # 80% training set
                 test_size = total_points - train_size
 
-                # 检查维度
+                # Check dimensions
                 self.assertEqual(dataset['coords'].shape[0], train_size)
                 self.assertEqual(dataset['coords'].shape[1], config['input_dim'])
                 self.assertEqual(dataset['test_coords'].shape[0], test_size)
                 self.assertEqual(dataset['test_coords'].shape[1], config['input_dim'])
 
-                # 验证保存的文件
+                # Verify saved files
                 save_path = self.temp_save_dir / f"{config['name']}{args.len_sample}.pkl"
                 self.assertTrue(save_path.exists())
 
-                # 加载并验证保存的数据
+                # Load and verify saved data
                 loaded_data = from_pickle(save_path)
                 for key in expected_keys:
                     self.assertTrue(tf.reduce_all(tf.equal(dataset[key], loaded_data[key])))
 
-                # 检查数据的有限性
+                # Check data finiteness
                 for key in expected_keys:
                     self.assertTrue(tf.reduce_all(tf.math.is_finite(dataset[key])))
 
     def tearDown(self):
-        """清理测试环境"""
-        # 删除临时目录及其内容
+        """Clean up test environment"""
+        # Delete temporary directory and its contents
         if self.temp_save_dir.exists():
             shutil.rmtree(self.temp_save_dir)
-        # 清理TensorFlow会话
+        # Clear TensorFlow session
         tf.keras.backend.clear_session()
 
 

@@ -5,10 +5,10 @@ import os
 import sys
 from pathlib import Path
 
-# 获取项目根目录的路径
+# Get the project root path
 PROJECT_ROOT = Path(__file__).parent.parent
 
-# 将codes目录添加到Python路径
+# Add codes directory to Python path
 sys.path.append(str(PROJECT_ROOT))
 
 from codes.utils import compute_training_loss, compute_gradients, leapfrog
@@ -19,7 +19,7 @@ from codes.get_args import get_args
 
 class TestHNNUtils(unittest.TestCase):
     def setUp(self):
-        """设置测试环境"""
+        """Set up test environment"""
         self.args = get_args()
         self.model_configs = [
             {
@@ -49,12 +49,19 @@ class TestHNNUtils(unittest.TestCase):
         ]
 
     def load_model(self, config):
-        """加载指定配置的模型"""
+        """Load model with specified configuration
+
+        Args:
+            config: Dictionary containing model configuration parameters
+
+        Returns:
+            Model instance with loaded weights
+        """
         self.args.input_dim = config['input_dim']
         self.args.latent_dim = config['latent_dim']
         self.args.dist_name = config['dist_name']
 
-        # 创建MLP模型
+        # Create MLP model
         differentiable_model = MLP(
             input_dim=self.args.input_dim,
             hidden_dim=self.args.hidden_dim,
@@ -62,19 +69,19 @@ class TestHNNUtils(unittest.TestCase):
             nonlinearity=self.args.nonlinearity
         )
 
-        # 创建HNN模型
+        # Create HNN model
         model = HNN(
             input_dim=self.args.input_dim,
             differentiable_model=differentiable_model
         )
 
-        # 编译模型
+        # Compile model
         model.compile(optimizer=tf.keras.optimizers.Adam(self.args.learn_rate))
 
-        # 构建完整的权重文件路径
+        # Build complete weight file path
         weight_path = os.path.join(PROJECT_ROOT, 'codes', 'files', config['name'])
         try:
-            # 检查权重文件是否存在
+            # Check if weight file exists
             if os.path.exists(weight_path + '.index'):
                 model.load_weights(weight_path)
                 print(f"Successfully loaded weights for {config['name']}")
@@ -86,34 +93,34 @@ class TestHNNUtils(unittest.TestCase):
         return model
 
     def test_compute_gradients(self):
-        """测试计算梯度函数"""
+        """Test gradient computation function"""
         for config in self.model_configs:
             with self.subTest(model_name=config['name']):
                 model = self.load_model(config)
 
-                # 创建测试数据
+                # Create test data
                 batch_size = 4
                 x = tf.random.normal([batch_size, config['input_dim']],
-                                     mean=0.0, stddev=0.1)  # 减小初始值范围
+                                     mean=0.0, stddev=0.1)  # Reduce initial value range
 
-                # 计算梯度
+                # Compute gradients
                 grad_p, grad_q = compute_gradients(model, x)
 
-                # 检查输出形状
+                # Check output shapes
                 self.assertEqual(grad_p.shape, (batch_size, config['input_dim'] // 2))
                 self.assertEqual(grad_q.shape, (batch_size, config['input_dim'] // 2))
 
-                # 检查梯度的有限性
+                # Check gradient finiteness
                 self.assertTrue(tf.reduce_all(tf.math.is_finite(grad_p)))
                 self.assertTrue(tf.reduce_all(tf.math.is_finite(grad_q)))
 
     def test_compute_training_loss(self):
-        """测试训练损失计算函数"""
+        """Test training loss computation function"""
         for config in self.model_configs:
             with self.subTest(model_name=config['name']):
                 model = self.load_model(config)
 
-                # 创建测试数据
+                # Create test data
                 batch_size = 4
                 batch_data = tf.random.normal([batch_size, config['input_dim']],
                                               mean=0.0, stddev=0.1)
@@ -123,41 +130,41 @@ class TestHNNUtils(unittest.TestCase):
                                            mean=0.0, stddev=0.1)
                 time_derivatives = (dq_true, dp_true)
 
-                # 计算损失
+                # Compute loss
                 loss = compute_training_loss(model, batch_data, time_derivatives)
 
-                # 检查损失值
+                # Check loss value
                 self.assertIsInstance(loss, tf.Tensor)
                 self.assertEqual(loss.shape, ())
                 self.assertTrue(tf.math.is_finite(loss))
                 self.assertGreaterEqual(float(loss), 0.0)
 
     def test_leapfrog(self):
-        """测试leapfrog积分器"""
+        """Test leapfrog integrator"""
         for config in self.model_configs:
             with self.subTest(model_name=config['name']):
                 model = self.load_model(config)
 
-                # 基础测试 - 确保输入是2D张量
+                # Basic test - ensure input is 2D tensor
                 z0 = tf.constant([[1.0, 0.5] * (config['input_dim'] // 2)], dtype=tf.float32)
                 t_span = [0.0, 1.0]
                 n_steps = 10
 
-                # 执行积分
+                # Perform integration
                 t, z = leapfrog(model, z0, t_span, n_steps)
 
-                # 检查输出形状
+                # Check output shapes
                 self.assertEqual(t.shape, (n_steps + 1,))
                 self.assertEqual(z.shape, (n_steps + 1, z0.shape[0], z0.shape[1]))
 
-                # 检查时间步长的单调性
+                # Check time step monotonicity
                 self.assertTrue(tf.reduce_all(t[1:] > t[:-1]))
 
-                # 检查轨迹的连续性
+                # Check trajectory continuity
                 diff = tf.reduce_max(tf.abs(z[1:] - z[:-1]))
                 self.assertLess(float(diff), 10.0)
 
-                # 为不同分布设置不同的差异阈值
+                # Set different thresholds for different distributions
                 diff_thresholds = {
                     '1D_Gauss_mix': 1.0,
                     '2D_Neal_funnel': 2.0,
@@ -165,7 +172,7 @@ class TestHNNUtils(unittest.TestCase):
                     'nD_Rosenbrock': 5.0
                 }
 
-                # 测试不同形状的输入
+                # Test different input shapes
                 input_shapes = [
                     (tf.constant([[1.0] * config['input_dim']], dtype=tf.float32), "batch_shape"),
                     (tf.reshape(tf.constant([1.0] * config['input_dim'], dtype=tf.float32),
@@ -173,37 +180,37 @@ class TestHNNUtils(unittest.TestCase):
                 ]
 
                 for z0_test, shape_type in input_shapes:
-                    # 测试整数步长
+                    # Test integer steps
                     t, z = leapfrog(model, z0_test, t_span, n_steps)
 
-                    # 检查输出形状
+                    # Check output shapes
                     self.assertEqual(z.shape, (n_steps + 1, 1, config['input_dim']))
 
-                    # 检查轨迹的连续性
+                    # Check trajectory continuity
                     diff = tf.reduce_max(tf.abs(z[1:] - z[:-1]))
                     self.assertLess(diff, diff_thresholds[config['dist_name']])
 
-                    # 检查能量守恒（对于保守系统）
+                    # Check energy conservation (for conservative systems)
                     if config['dist_name'] in ['1D_Gauss_mix', '2D_Neal_funnel']:
                         initial_energy = model.compute_hamiltonian(z[0])
                         final_energy = model.compute_hamiltonian(z[-1])
                         energy_diff = tf.abs(final_energy - initial_energy)
                         self.assertLess(float(energy_diff), 0.5)
 
-                # 测试浮点数步长
+                # Test float number of steps
                 n_steps_float = 10.0
                 try:
                     t, z = leapfrog(model, z0, t_span, n_steps_float)
-                    # 验证结果形状
+                    # Validate result shape
                     self.assertEqual(z.shape[0], int(n_steps_float) + 1)
                 except Exception as e:
                     self.fail(f"Float n_steps={n_steps_float} raised unexpected error: {e}")
 
-                # 测试时间范围边界情况
+                # Test time span edge cases
                 t_span_cases = [
-                    ([0.0, 1.0], None),  # 正常时间范围
-                    ([0.0, 1e3], None),  # 大时间范围
-                    ([0.0, 0.1], None)  # 小时间范围
+                    ([0.0, 1.0], None),  # Normal time span
+                    ([0.0, 1e3], None),  # Large time span
+                    ([0.0, 0.1], None)  # Small time span
                 ]
 
                 for t_span_test, expected_error in t_span_cases:
@@ -216,10 +223,10 @@ class TestHNNUtils(unittest.TestCase):
                             self.fail(f"t_span={t_span_test} raised unexpected error: {e}")
 
     def test_mlp(self):
-        """测试MLP模型"""
+        """Test MLP model"""
         for config in self.model_configs:
             with self.subTest(model_name=config['name']):
-                # 测试不同的激活函数
+                # Test different activation functions
                 for nonlinearity in ['sine', 'tanh', 'relu']:
                     mlp = MLP(
                         input_dim=config['input_dim'],
@@ -228,17 +235,17 @@ class TestHNNUtils(unittest.TestCase):
                         nonlinearity=nonlinearity
                     )
 
-                    # 测试前向传播
+                    # Test forward pass
                     x = tf.random.normal([4, config['input_dim']])
                     output = mlp(x)
 
-                    # 检查输出形状
+                    # Check output shape
                     self.assertEqual(output.shape, (4, config['latent_dim']))
 
-                    # 检查输出的有限性
+                    # Check output finiteness
                     self.assertTrue(tf.reduce_all(tf.math.is_finite(output)))
 
-                # 测试无效的激活函数
+                # Test invalid activation function
                 with self.assertRaises(ValueError):
                     MLP(
                         input_dim=config['input_dim'],
@@ -248,34 +255,34 @@ class TestHNNUtils(unittest.TestCase):
                     )
 
     def test_hnn(self):
-        """测试HNN模型"""
+        """Test HNN model"""
         for config in self.model_configs:
             with self.subTest(model_name=config['name']):
                 model = self.load_model(config)
 
-                # 测试动能计算
+                # Test kinetic energy computation
                 p = tf.random.normal([4, config['input_dim'] // 2])
                 kinetic = model.kinetic_energy(p)
                 self.assertEqual(kinetic.shape, (4,))
-                self.assertTrue(tf.reduce_all(kinetic >= 0))  # 动能应该非负
+                self.assertTrue(tf.reduce_all(kinetic >= 0))  # Kinetic energy should be non-negative
 
-                # 测试Hamiltonian计算
+                # Test Hamiltonian computation
                 x = tf.random.normal([4, config['input_dim']])
                 H = model.compute_hamiltonian(x)
                 self.assertEqual(H.shape, (4, 1))
                 self.assertTrue(tf.reduce_all(tf.math.is_finite(H)))
 
-                # 测试时间导数计算
+                # Test time derivative computation
                 derivatives = model.time_derivative(x)
                 self.assertEqual(derivatives.shape, x.shape)
                 self.assertTrue(tf.reduce_all(tf.math.is_finite(derivatives)))
 
-                # 测试质量矩阵
-                # 默认质量矩阵
+                # Test mass matrix
+                # Default mass matrix
                 self.assertEqual(model.M.shape, (config['input_dim'] // 2,))
-                self.assertTrue(tf.reduce_all(model.M > 0))  # 质量应该为正
+                self.assertTrue(tf.reduce_all(model.M > 0))  # Mass should be positive
 
-                # 自定义质量矩阵
+                # Custom mass matrix
                 custom_mass = tf.ones(config['input_dim'] // 2) * 2.0
                 model_custom_mass = HNN(
                     input_dim=config['input_dim'],
@@ -284,7 +291,7 @@ class TestHNNUtils(unittest.TestCase):
                 )
                 self.assertTrue(tf.reduce_all(tf.equal(model_custom_mass.M, custom_mass)))
 
-                # 验证Hamilton方程
+                # Validate Hamilton equations
                 with tf.GradientTape() as tape:
                     tape.watch(x)
                     H = model.compute_hamiltonian(x)
@@ -292,28 +299,28 @@ class TestHNNUtils(unittest.TestCase):
                 dH = tape.gradient(H, x)
                 derivatives = model.time_derivative(x)
 
-                # 验证 dq/dt = ∂H/∂p
+                # Verify dq/dt = ∂H/∂p
                 dq_dt = derivatives[:, :config['input_dim'] // 2]
                 dH_dp = dH[:, config['input_dim'] // 2:]
                 self.assertTrue(tf.reduce_all(tf.abs(dq_dt - dH_dp) < 1e-5))
 
-                # 验证 dp/dt = -∂H/∂q
+                # Verify dp/dt = -∂H/∂q
                 dp_dt = derivatives[:, config['input_dim'] // 2:]
                 dH_dq = dH[:, :config['input_dim'] // 2]
                 self.assertTrue(tf.reduce_all(tf.abs(dp_dt + dH_dq) < 1e-5))
 
     def test_hnn_error_handling(self):
-        """测试HNN错误处理"""
+        """Test HNN error handling"""
         config = self.model_configs[0]
         model = self.load_model(config)
 
-        # 测试维度不匹配
+        # Test dimension mismatch
         invalid_input = tf.random.normal([4, config['input_dim'] + 1])
         with self.assertRaises(ValueError):
             model.time_derivative(invalid_input)
 
-        # 测试梯度计算失败的情况
-        # 这需要模拟一个会导致梯度计算失败的情况
+        # Test gradient computation failure case
+        # This needs to simulate a case that will cause gradient computation to fail
         class BadModel(tf.keras.Model):
             def call(self, x):
                 return tf.zeros_like(x)[:, 0:1]
@@ -327,6 +334,7 @@ class TestHNNUtils(unittest.TestCase):
             bad_model.time_derivative(tf.random.normal([4, config['input_dim']]))
 
     def tearDown(self):
+        """Clean up test environment"""
         tf.keras.backend.clear_session()
 
 

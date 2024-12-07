@@ -53,7 +53,15 @@ Run the following scripts to replicate the respective results presented in Dhuli
 
 ## Testing
 
-Unit tests are written in **`unittest`** and stored in the **`tests/`** folder under the root directory.
+Unit tests are written in **`unittest`** and stored in the **`tests/`** folder under the root directory. Below is a detailed breakdown of the test files and their purposes:
+
+- **`test_utils.py`**: Tests utility functions in `utils.py`.
+- **`test_hnn_utils.py`**: Tests utility functions from `utils.py` and their integration with the Hamiltonian Neural Network (HNN) framework.
+- **`test_data.py`**: Tests data generation functions from the data module, specifically `get_trajectory` and `get_dataset`.
+- **`test_functions.py`**: Tests mathematical operations implemented in `functions.py`.
+- **`test_traditional_hmc.py`**: Tests the implementation of the `TraditionalHMC` class for performing Hamiltonian Monte Carlo (HMC) sampling.
+- **`test_hnn_hmc.py`**: Tests the implementation of the `HNNSampler` class, which combines Hamiltonian Neural Networks (HNN) with Hamiltonian Monte Carlo (HMC) sampling.
+- **`test_hnn_nuts.py`**: Tests the No-U-Turn Sampler (NUTS) implementation integrated with Hamiltonian Neural Networks (HNN).
 
 ---
 
@@ -62,3 +70,4 @@ Unit tests are written in **`unittest`** and stored in the **`tests/`** folder u
 1. Set up the environment using Python 3.8 and install the required libraries.
 2. Navigate to the **`codes/`** folder to access the core files and scripts.
 3. Use the replication scripts to reproduce the results, or explore the provided modules for further experimentation.
+4. Run the unit tests in the **`tests/`** folder to validate the functionality of the codebase.

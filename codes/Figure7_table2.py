@@ -254,8 +254,8 @@ def run_comparison():
     args.dist_name = 'nD_Rosenbrock'
     args.input_dim = 6  # 3D Rosenbrock
     args.latent_dim = 100
-    args.total_samples = 20  # Total samples (adjust as needed)
-    args.burn_in = 5
+    args.total_samples = 20000  # Total samples (adjust as needed)
+    args.burn_in = 5000
     args.nuts_step_size = 0.025
     args.hnn_error_threshold = 10.0
     args.num_chains = 1

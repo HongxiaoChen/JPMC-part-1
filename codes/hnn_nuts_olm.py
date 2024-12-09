@@ -187,7 +187,7 @@ def nuts_hnn_sample(hnn_model, args, traditional_only=False, logger=None):
     Raises:
         ValueError: If any of the input parameters are invalid.
     """
-    # 参数验证
+    # raise value error
     if args.nuts_step_size <= 0:
         raise ValueError(f"Step size must be positive, got {args.nuts_step_size}")
 

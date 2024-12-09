@@ -204,8 +204,8 @@ def run_rosenbrock_comparison():
     args.dist_name = 'nD_Rosenbrock'
     args.input_dim = 20  # 10D Rosenbrock (position + momentum = 20 dimensions)
     args.latent_dim = 10  # 10D latent space
-    args.total_samples = 20  # Total samples (adjust as needed)
-    args.burn_in = 5  # Burn-in samples
+    args.total_samples = 30000  # Total samples (adjust as needed)
+    args.burn_in = 5000  # Burn-in samples
     args.nuts_step_size = 0.025
     args.hnn_error_threshold = 10.0
     args.num_chains = 1

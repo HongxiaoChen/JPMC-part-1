@@ -178,7 +178,7 @@ def run_comparison():
     args = get_args()
     args.dist_name = 'nD_Rosenbrock'
     args.input_dim = 6  # 3D Rosenbrock
-    args.total_samples = 10  # Use fewer samples for Figure 4
+    args.total_samples = 5000  # Use fewer samples for Figure 4
     args.burn_in = 0  # No burn-in for Figure 4
     args.nuts_step_size = 0.025
     args.num_chains = 1
@@ -203,8 +203,8 @@ def run_comparison():
     args = get_args()
     args.dist_name = 'nD_Rosenbrock'
     args.input_dim = 6  # 3D Rosenbrock
-    args.total_samples = 15  # Increase sample size to match the paper
-    args.burn_in = 5
+    args.total_samples = 20000  # Increase sample size to match the paper
+    args.burn_in = 5000
     args.nuts_step_size = 0.025
     args.hnn_error_threshold = 10.0
     args.num_chains = 1

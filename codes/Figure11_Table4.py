@@ -235,7 +235,7 @@ def run_allen_cahn_comparison():
     args.dist_name = 'Allen_Cahn'
     args.input_dim = 50  # 25D Allen-Cahn (position + momentum = 50 dimensions)
     args.latent_dim = 25
-    args.total_samples = 20  # Total samples
+    args.total_samples = 5000  # Total samples
     args.burn_in = 0  # Burn-in samples
     args.nuts_step_size = 0.025
     args.hnn_error_threshold = 10.0

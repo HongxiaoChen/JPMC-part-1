@@ -194,8 +194,8 @@ def run_neals_funnel_comparison():
     args.dist_name = '2D_Neal_funnel'
     args.input_dim = 4  # 2D Neal's funnel
     args.latent_dim = 2
-    args.total_samples = 10  # Total samples (adjust as needed)
-    args.burn_in = 5  # Burn-in samples
+    args.total_samples = 10000  # Total samples (adjust as needed)
+    args.burn_in = 5000  # Burn-in samples
     args.nuts_step_size = 0.025
     args.hnn_error_threshold = 10.0
     args.num_chains = 1

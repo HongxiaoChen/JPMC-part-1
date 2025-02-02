@@ -1,6 +1,8 @@
-# JPMC ML
+# HNN and HMC
 
 This repository contains code samples for the **2025 Machine Learning Center of Excellence Summer Associate** projects. Specifically, it replicates the results from the article *"Efficient Bayesian inference with latent Hamiltonian neural networks in No-U-Turn Sampling"* by **Somayajulu L.N. Dhulipala, Yifeng Che, and Michael D. Shields**.
+
+Codes and reports for part 2 are in this [link](https://github.com/HongxiaoChen/JPMC-part-2).
 
 ---
 

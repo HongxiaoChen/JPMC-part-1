@@ -6,6 +6,15 @@ Codes and reports for part 2 of this task are in [Pseudo-Marginal HNN HMC](https
 
 ---
 
+## Running Tests
+
+To run tests, navigate to the `tests` directory and use the command line:
+
+bash
+`python -m unittest discover -v `
+
+---
+
 ## Environment
 
 The code is written in **Python 3.8** and requires the following libraries:

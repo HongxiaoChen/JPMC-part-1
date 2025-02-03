@@ -153,7 +153,6 @@ def functions(coords, args):
 
     # ******** 2D Neal's Funnel #********
     elif (args.dist_name == '2D_Neal_funnel'):
-        # 分离位置和动量
         dim = args.input_dim // 2
         q = coords[:, :dim]  # [batch_size, 2]
         p = coords[:, dim:]  # [batch_size, 2]
@@ -191,7 +190,6 @@ def functions(coords, args):
 
     # ******** nD Rosenbrock #********
     elif (args.dist_name == 'nD_Rosenbrock'):
-        # 分离位置和动量
         dim = args.input_dim // 2
         q = coords[:, :dim]  # [batch_size, dim]
         p = coords[:, dim:]  # [batch_size, dim]

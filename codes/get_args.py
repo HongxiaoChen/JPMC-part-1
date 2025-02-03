@@ -35,7 +35,7 @@ def get_args():
     parser.add_argument('--print_every', default=25, type=int, help='number of gradient steps between prints')
     parser.add_argument('--seed', default=0, type=int, help='random seed')
     parser.set_defaults(feature=True)
-    # 基础HMC参数
+    
     parser.add_argument('--num_chains', default=1, type=int,
                        help='number of Markov chains')
     parser.add_argument('--hmc_samples', default=5000, type=int,
@@ -48,7 +48,7 @@ def get_args():
                        help='step size for leapfrog integration')
 
 
-    # 添加学习率调度相关参数
+   
     parser.add_argument('--decay_steps', default = 1000, type=int, 
                         help = 'steps of each decay in lr')
     parser.add_argument('--decay_rate', default = 0.96, type=float,
@@ -56,7 +56,7 @@ def get_args():
     
 
 
-    # NUTS采样参数
+    # NUTS
     parser.add_argument('--total_samples', default=5000, type=int,
                        help='number of total NUTS samples')
     parser.add_argument('--burn_in', default=1000, type=int,

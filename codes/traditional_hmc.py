@@ -94,8 +94,8 @@ class TraditionalHMC:
                 # Sample momentum from a standard normal distribution
                 momenta = tf.random.normal([self.state_dim], mean=0., stddev=1.)
                 current_state = tf.concat([
-                    current_state[:self.state_dim],  # 保持位置坐标
-                    momenta  # 新的动量
+                    current_state[:self.state_dim],
+                    momenta  
                 ], axis=0)
 
                 # prepare data for leapfrog

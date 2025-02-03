@@ -23,14 +23,13 @@ class MLP(tf.keras.Model):
         else:
             raise ValueError(f"Nonlinearity {nonlinearity} not recognized")
 
-        # 定义网络层
+        
         self.layer1 = tf.keras.layers.Dense(hidden_dim)
         self.layer2 = tf.keras.layers.Dense(hidden_dim)
         self.layer3 = tf.keras.layers.Dense(self.latent_dim)
 
     def call(self, x):
         """
-        前向传播，输出潜变量
         Args:
             x: [batch_size, input_dim]
         Returns:

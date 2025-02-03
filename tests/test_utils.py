@@ -127,7 +127,7 @@ class TestUtils(unittest.TestCase):
                 lambda x, args: functions(x, args),
                 z0, t_span, n_steps_float, self.args
             )
-            # 验证结果形状
+            
             self.assertEqual(traj.shape, (int(n_steps_float) + 1, z0.shape[0], z0.shape[1]))
         except Exception as e:
             self.fail(f"Float n_steps raised unexpected error: {e}")

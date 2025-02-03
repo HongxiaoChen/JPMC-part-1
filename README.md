@@ -6,6 +6,15 @@ Codes and reports for part 2 of this task are in [Pseudo-Marginal HNN HMC](https
 
 ---
 
+## How to Run
+
+1. Set up the environment using Python 3.8 and install the required libraries.
+2. Navigate to the **`codes/`** folder to access the core files and scripts.
+3. Use the replication scripts to reproduce the results, or explore the provided modules for further experimentation.
+4. Run the unit tests in the **`tests/`** folder to validate the functionality of the codebase.
+
+---
+
 ## Running Tests
 
 To run tests, navigate to the `tests` directory and use the command line:
@@ -74,11 +83,4 @@ Unit tests are written in **`unittest`** and stored in the **`tests/`** folder u
 - **`test_hnn_hmc.py`**: Tests the implementation of the `HNNSampler` class, which combines Hamiltonian Neural Networks (HNN) with Hamiltonian Monte Carlo (HMC) sampling.
 - **`test_hnn_nuts.py`**: Tests the No-U-Turn Sampler (NUTS) implementation integrated with Hamiltonian Neural Networks (HNN).
 
----
 
-## How to Run
-
-1. Set up the environment using Python 3.8 and install the required libraries.
-2. Navigate to the **`codes/`** folder to access the core files and scripts.
-3. Use the replication scripts to reproduce the results, or explore the provided modules for further experimentation.
-4. Run the unit tests in the **`tests/`** folder to validate the functionality of the codebase.
